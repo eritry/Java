@@ -30,7 +30,7 @@ public class ArrayQueueTest<T extends ArrayQueueTest.Queue> extends Asserts {
     protected final Random random = new Random(2474258720358724587L);
 
     public ArrayQueueTest(final QueueFactory<T> factory) {
-        Asserts.checkAssert(getClass());
+      //  Asserts.checkAssert(getClass());
         this.factory = factory;
     }
 

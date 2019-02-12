@@ -18,7 +18,7 @@ public abstract strictfp class BaseTest extends Asserts {
     protected BaseTest() {
         Locale.setDefault(Locale.US);
 
-        checkAssert(getClass());
+        //checkAssert(getClass());
     }
 
     public static String repeat(final String s, final int n) {
