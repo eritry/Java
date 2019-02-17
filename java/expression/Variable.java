@@ -1,6 +1,6 @@
 package expression;
 
-public class Variable implements AllExpressions {
+public class Variable implements TripleExpression {
     private String name;
 
     public Variable(String name) {
@@ -8,10 +8,6 @@ public class Variable implements AllExpressions {
     }
 
     public int evaluate(int val) {
-        return val;
-    }
-
-    public double evaluate(double val) {
         return val;
     }
 

@@ -1,8 +1,8 @@
 package expression;
 
-public class Multiply extends Operator implements AllExpressions {
+public class Multiply extends Operator implements TripleExpression {
 
-    public Multiply(AllExpressions f, AllExpressions s) {
+    public Multiply(TripleExpression f, TripleExpression s) {
         super(f, s);
     }
 
@@ -10,7 +10,4 @@ public class Multiply extends Operator implements AllExpressions {
         return a * b;
     }
 
-    protected double operator(double a, double b) {
-        return a * b;
-    }
 }

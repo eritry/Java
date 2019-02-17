@@ -1,8 +1,8 @@
 package expression;
 
-public class Divide extends Operator implements AllExpressions {
+public class Divide extends Operator implements TripleExpression {
 
-    public Divide(AllExpressions f, AllExpressions s) {
+    public Divide(TripleExpression f, TripleExpression s) {
         super(f, s);
     }
 
@@ -10,7 +10,4 @@ public class Divide extends Operator implements AllExpressions {
         return a / b;
     }
 
-    protected double operator(double a, double b) {
-        return a / b;
-    }
 }
