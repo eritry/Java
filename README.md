@@ -1,4 +1,4 @@
-# ParseException: Обработка ошибок
+# expression.exceptions: Обработка ошибок
 
 Модификации
  * *Базовая*
