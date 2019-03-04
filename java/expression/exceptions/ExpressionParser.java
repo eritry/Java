@@ -1,175 +1,136 @@
 package expression.exceptions;
-import expression.TripleExpression;
 
-import expression.Add;
-import expression.Multiply;
-import expression.Divide;
-import expression.Subtract;
-import expression.Variable;
 import expression.Const;
-import expression.High;
-import expression.Low;
-
-import java.io.IOException;
+import expression.TripleExpression;
+import expression.Variable;
 
 public class ExpressionParser implements Parser {
     private PSource source;
+    private int cntIn = 0;
+
     public TripleExpression parse(String expression) throws ParseException {
         source = new PSource(expression);
-
         source.nextChar();
 
-        skipSpaces();
-        final Result res = plusMinus();
-        expect(PSource.END,"end of file");
-        return res.accumulator;
+        final TripleExpression res = addDivide();
+        expect(PSource.END);
+        return res;
     }
 
-    private Result plusMinus() throws ParseException {
-        skipSpaces();
-        Result cur = mulDiv();
+    private TripleExpression addDivide() throws ParseException {
         skipSpaces();
 
-        TripleExpression acc = cur.accumulator;
-
+        TripleExpression acc = mulDiv();
+        skipSpaces();
         while (test('+') || test('-')) {
             char sign = source.getChar();
             source.nextChar();
 
-            cur = mulDiv();
-            skipSpaces();
+            cntIn++;
+            TripleExpression cur = mulDiv();
+            cntIn--;
 
+            skipSpaces();
             if (sign == '+') {
-                acc = new Add(acc, cur.accumulator);
+                acc = new CheckedAdd(acc, cur);
             } else {
-                acc = new Subtract(acc, cur.accumulator);
+                acc = new CheckedSubtract(acc, cur);
             }
 
         }
-
-        cur.accumulator = acc;
-        return cur;
+        return acc;
     }
 
-    private Result mulDiv() throws ParseException {
-        skipSpaces();
-        Result cur = unary();
+    private TripleExpression mulDiv() throws ParseException {
+        TripleExpression cur = unary();
         skipSpaces();
 
-        TripleExpression acc = cur.accumulator;
-
+        TripleExpression acc = cur;
         while (test('*') || test('/')) {
             char type = source.getChar();
             source.nextChar();
 
+            cntIn++;
             cur = unary();
+            cntIn--;
+
             skipSpaces();
 
             if (type == '*') {
-                acc = new Multiply(acc, cur.accumulator);
+                acc = new CheckedMultiply(acc, cur);
             } else {
-                acc = new Divide(acc, cur.accumulator);
+                acc = new CheckedDivide(acc, cur);
             }
         }
 
-        cur.accumulator = acc;
-        return cur;
+        return acc;
     }
 
-    private Result unary() throws ParseException {
+    private TripleExpression unary() throws ParseException {
         skipSpaces();
 
-        Result cur;
-        if (test('-')) {
+        if (test('-') || test('+')) {
+            if (cntIn > 0 && !source.prevIsBracket() && test('+')) {
+                throw source.error("Invalid name of variable: '%s'", source.getChar());
+            }
+            char sign = source.getChar();
             source.nextChar();
             skipSpaces();
-            boolean isDigit = false;
 
             if (testDigit()) {
-                isDigit = true;
-                cur = number('-');
+                return number(sign);
             } else {
-                cur = unary();
-            }
-
-            if (isDigit) {
-                cur.accumulator = new Add(new Const(0), cur.accumulator);
-            } else {
-                cur.accumulator = new Subtract(new Const(0), cur.accumulator);
+                return new CheckedSubtract(new Const(0), unary());
             }
 
         } else if (source.extend("low")) {
-            cur = unary();
-            cur.accumulator = new Low(cur.accumulator);
+            return new CheckedLow(unary());
         } else if (source.extend("high")) {
-            cur = unary();
-            cur.accumulator = new High(cur.accumulator);
-        } else {
-            cur = bracket();
-        }
-        return cur;
-    }
-
-    private Result bracket() throws ParseException {
-        skipSpaces();
-        if (test('(')) {
+            return new CheckedHigh(unary());
+        } else if (test('(')) {
             source.nextChar();
-            Result cur = plusMinus();
+            TripleExpression cur = addDivide();
             skipSpaces();
 
-            if (!test(')')) {
-                throw source.error("Expected ')', founded '%s'", source.getChar());
-            }
+            expect(')');
 
-            source.nextChar();
             return cur;
+        } else {
+            return variable();
         }
-
-        return variable();
     }
 
-    private Result variable() throws ParseException {
+    private TripleExpression variable() throws ParseException {
         skipSpaces();
 
         if (test('-') || testDigit()) {
             return number('+');
         }
-
         if (!test('x') && !test('y') && !test('z')) {
             throw source.error("Invalid name of variable: '%s'", source.getChar());
         }
 
         char val = source.getChar();
         source.nextChar();
-        return new Result(new Variable(Character.toString(val)));
+        return new Variable(Character.toString(val));
     }
 
-    private Result number(char c) throws ParseException {
+    private TripleExpression number(char c) throws ParseException {
         final StringBuilder sb = new StringBuilder();
         sb.append(c);
         readDigits(sb);
         try {
             int res = Integer.parseInt(sb.toString());
-            return new Result(new Const(res));
-
+            return new Const(res);
         } catch (final NumberFormatException e){
             throw source.error("Invalid number '%s'", sb);
         }
     }
 
-    private void readDigits(final StringBuilder sb) throws ParseException {
+    private void readDigits(final StringBuilder sb) {
         do {
             sb.append(source.getChar());
         } while (Character.isDigit(source.nextChar()));
-    }
-
-    private boolean testNext(final char c) throws ParseException {
-        if (source.getChar() == c) {
-            source.nextChar();
-            return true;
-        } else {
-            return false;
-        }
     }
 
     private boolean test(final char c) {
@@ -180,20 +141,20 @@ public class ExpressionParser implements Parser {
         return Character.isDigit(source.getChar());
     }
 
-    private void expect(final char expected, final String errorMessage) throws ParseException {
+    private void expect(final char expected) throws ParseException {
         final char actual = source.getChar();
         if (actual == expected) {
             if (expected != PSource.END) {
                 source.nextChar();
             }
         } else if (actual != PSource.END) {
-            throw source.error("Expected %s, found '%s' (%d)", errorMessage, actual, (int) actual);
+            throw source.error("Expected %s, found '%s' (%d)", "end of file", actual, (int) actual);
         } else {
-            throw source.error("Expected %s, found EOF", errorMessage);
+            throw source.error("Expected %s, found EOF", "end of file");
         }
     }
 
-    private void skipSpaces() throws ParseException {
+    private void skipSpaces() {
         while (Character.isWhitespace(source.getChar())) {
             source.nextChar();
         }
