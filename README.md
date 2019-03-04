@@ -61,7 +61,6 @@
     * isEmpty – является ли очередь пустой;
     * clear – удалить все элементы из очереди.
 
-Модификации
     * Классы находиятся в пакете `queue`
     * [Исходный код тестов](java/queue/ArrayQueueTest.java)
     * [Откомпилированные тесты](artifacts/queue/ArrayQueueTest.jar)
@@ -82,7 +81,6 @@
 4. Реализован класс LinkedQueue — очередь на связном списке.
 5. Выделены общие части классов LinkedQueue и ArrayQueue в базовый класс AbstractQueue.
 
-Модификации
     * [Исходный код тестов](java/queue/QueueTest.java)
     * [Откомпилированные тесты](artifacts/queue/QueueTest.jar)
     * Добавн в интерфейс очереди и реализован метод
