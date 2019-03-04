@@ -60,16 +60,11 @@
     * size – текущий размер очереди;
     * isEmpty – является ли очередь пустой;
     * clear – удалить все элементы из очереди.
-
+3. Специфика проекта:
     * Классы находиятся в пакете `queue`
-    * [Исходный код тестов](java/queue/ArrayQueueTest.java)
-    * [Откомпилированные тесты](artifacts/queue/ArrayQueueTest.jar)
     * Реализован метод `toArray`, возвращающий массив,
       содержащий элементы, лежащие в очереди в порядке
       от головы к хвосту.
-    * Исходная очередь остается неизменной
-    * [Исходный код тестов](java/queue/ArrayQueueToArrayTest.java)
-    * [Откомпилированные тесты](artifacts/queue/ArrayQueueToArrayTest.jar)
     * Реализованы методы
         * `push` – добавить элемент в начало очереди
         * `peek` – вернуть последний элемент в очереди
@@ -77,18 +72,13 @@
     * [Исходный код тестов](java/queue/ArrayQueueDequeTest.java)
     * [Откомпилированные тесты](artifacts/queue/ArrayQueueDequeTest.jar)
 
-3. Определен интерфейс очереди Queue и опишите его контракт.
-4. Реализован класс LinkedQueue — очередь на связном списке.
-5. Выделены общие части классов LinkedQueue и ArrayQueue в базовый класс AbstractQueue.
-
-    * [Исходный код тестов](java/queue/QueueTest.java)
-    * [Откомпилированные тесты](artifacts/queue/QueueTest.jar)
+4. Определен интерфейс очереди Queue и опиcан его контракт.
+5. Реализован класс LinkedQueue — очередь на связном списке.
+6. Выделены общие части классов LinkedQueue и ArrayQueue в базовый класс AbstractQueue.
     * Добавн в интерфейс очереди и реализован метод
       `toArray`, возвращающий массив,
       содержащий элементы, лежащие в очереди в порядке
       от головы к хвосту
-    * [Исходный код тестов](java/queue/QueueToArrayTest.java)
-    * [Откомпилированные тесты](artifacts/queue/QueueToArrayTest.jar)
     * Добавлен в интерфейс очереди и реализованы методы
         * `filter(predicate)` – создать очередь, содержащую элементы, удовлетворяющие
             [предикату](https://docs.oracle.com/javase/8/docs/api/java/util/function/Predicate.html)
