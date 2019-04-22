@@ -1,8 +1,9 @@
+/*
 package expression.exceptions;
 
 import expression.parser.Either;
-import expression.TripleExpression;
-import expression.Variable;
+import expression.expressions.TripleExpression;
+import expression.expressions.Variable;
 import expression.parser.ParserTest;
 
 import java.util.ArrayList;
@@ -10,10 +11,12 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.function.LongBinaryOperator;
 
+*/
 /**
  * @author Niyaz Nigmatullin
  * @author Georgiy Korneev (kgeorgiy@kgeorgiy.info)
- */
+ *//*
+
 public class ExceptionsTest extends ParserTest {
     private final static int D = 5;
     private final static List<Integer> OVERFLOW_VALUES = new ArrayList<>();
@@ -49,8 +52,8 @@ public class ExceptionsTest extends ParserTest {
             op("Constant overflow 2", Integer.MAX_VALUE + 1L + ""),
             op("Bare +", "+"),
             op("Bare -", "-"),
-            op("Bare a", "a"),
-            op("(())", "(())")
+            op("(())", "(())"),
+            op("Spaces in numbers", "10 20")
     ));
 
     public static Op<String> parseExample(final String hello) {
@@ -156,4 +159,4 @@ public class ExceptionsTest extends ParserTest {
                 ? Either.left(OVERFLOW)
                 : super.lift(value);
     }
-}
+}*/

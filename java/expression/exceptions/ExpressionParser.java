@@ -1,54 +1,66 @@
 package expression.exceptions;
+import expression.expressions.*;
+import expression.generic.NumberException;
+import expression.operations.*;
 
-import expression.Const;
-import expression.TripleExpression;
-import expression.Variable;
-
-public class ExpressionParser implements Parser {
+public class ExpressionParser<T> implements Parser<T> {
     private PSource source;
     private int cntIn = 0;
+    private Operation<T> op;
 
-    public TripleExpression parse(String expression) throws ParseException {
+    public ExpressionParser(final Operation<T> x) {
+        op = x;
+    }
+
+    public TripleExpression<T> parse(String expression) {
         source = new PSource(expression);
         source.nextChar();
 
-        final TripleExpression res = addDivide();
-        expect(PSource.END);
+        TripleExpression<T> res = null;
+        try {
+            res = addDivide();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
         return res;
     }
 
-    private TripleExpression addDivide() throws ParseException {
+    private TripleExpression<T> addDivide() throws NumberException, ParseException {
         skipSpaces();
 
-        TripleExpression acc = mulDiv();
+        TripleExpression<T> acc = mulDiv();
         skipSpaces();
         while (test('+') || test('-')) {
             char sign = source.getChar();
             source.nextChar();
 
             cntIn++;
-            TripleExpression cur = mulDiv();
+            TripleExpression<T> cur = mulDiv();
             cntIn--;
 
             skipSpaces();
             if (sign == '+') {
-                acc = new CheckedAdd(acc, cur);
+                acc = new Add<T>(acc, cur, op);
             } else {
-                acc = new CheckedSubtract(acc, cur);
+                acc = new Subtract<T>(acc, cur, op);
             }
 
         }
         return acc;
     }
 
-    private TripleExpression mulDiv() throws ParseException {
-        TripleExpression cur = unary();
+    private TripleExpression<T> mulDiv() throws ParseException, NumberException {
+        TripleExpression<T> cur = unary();
         skipSpaces();
 
-        TripleExpression acc = cur;
-        while (test('*') || test('/')) {
+        TripleExpression<T> acc = cur;
+
+        while (test('*') || test('/') || source.extend("mod")) {
             char type = source.getChar();
-            source.nextChar();
+            if (type == '/' || type == '*') {
+                source.nextChar();
+            }
 
             cntIn++;
             cur = unary();
@@ -57,22 +69,21 @@ public class ExpressionParser implements Parser {
             skipSpaces();
 
             if (type == '*') {
-                acc = new CheckedMultiply(acc, cur);
+                acc = new Multiply<>(acc, cur, op);
+            } else if (type == '/'){
+                acc = new Divide<>(acc, cur, op);
             } else {
-                acc = new CheckedDivide(acc, cur);
+                acc = new Mod<>(acc, cur, op);
             }
         }
-
         return acc;
     }
 
-    private TripleExpression unary() throws ParseException {
+    private TripleExpression<T> unary() throws NumberException, ParseException {
         skipSpaces();
 
         if (test('-') || test('+')) {
-            if (cntIn > 0 && !source.prevIsBracket() && test('+')) {
-                throw source.error("Invalid name of variable: '%s'", source.getChar());
-            }
+
             char sign = source.getChar();
             source.nextChar();
             skipSpaces();
@@ -80,51 +91,41 @@ public class ExpressionParser implements Parser {
             if (testDigit()) {
                 return number(sign);
             } else {
-                return new CheckedSubtract(new Const(0), unary());
+                return new Subtract<>(new Const<>(null), unary(), op);
             }
-
-        } else if (source.extend("low")) {
-            return new CheckedLow(unary());
-        } else if (source.extend("high")) {
-            return new CheckedHigh(unary());
+        } else if (source.extend("abs")) {
+            return new Abs<>(unary(), op);
+        } else if (source.extend("square")) {
+            return new Sqr<>(unary(), op);
         } else if (test('(')) {
             source.nextChar();
-            TripleExpression cur = addDivide();
+            TripleExpression<T> cur = addDivide();
             skipSpaces();
-
-            expect(')');
-
+            source.nextChar();
             return cur;
         } else {
             return variable();
         }
     }
 
-    private TripleExpression variable() throws ParseException {
+    private TripleExpression<T> variable() throws NumberException {
         skipSpaces();
 
         if (test('-') || testDigit()) {
             return number('+');
         }
-        if (!test('x') && !test('y') && !test('z')) {
-            throw source.error("Invalid name of variable: '%s'", source.getChar());
-        }
 
         char val = source.getChar();
         source.nextChar();
-        return new Variable(Character.toString(val));
+        return new Variable<>(Character.toString(val));
     }
 
-    private TripleExpression number(char c) throws ParseException {
+    private Const<T> number(char c) throws NumberException {
         final StringBuilder sb = new StringBuilder();
         sb.append(c);
         readDigits(sb);
-        try {
-            int res = Integer.parseInt(sb.toString());
-            return new Const(res);
-        } catch (final NumberFormatException e){
-            throw source.error("Invalid number '%s'", sb);
-        }
+        T res = op.parseNumber(sb.toString());
+        return new Const<T>(res);
     }
 
     private void readDigits(final StringBuilder sb) {
@@ -139,19 +140,6 @@ public class ExpressionParser implements Parser {
 
     private boolean testDigit() {
         return Character.isDigit(source.getChar());
-    }
-
-    private void expect(final char expected) throws ParseException {
-        final char actual = source.getChar();
-        if (actual == expected) {
-            if (expected != PSource.END) {
-                source.nextChar();
-            }
-        } else if (actual != PSource.END) {
-            throw source.error("Expected %s, found '%s' (%d)", "end of file", actual, (int) actual);
-        } else {
-            throw source.error("Expected %s, found EOF", "end of file");
-        }
     }
 
     private void skipSpaces() {

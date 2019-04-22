@@ -1,6 +1,4 @@
 package expression.exceptions;
-import java.io.IOException;
-
 
 public class PSource {
     public static char END = '\0';
@@ -10,11 +8,11 @@ public class PSource {
 
     private final String data;
 
-    public PSource(final String data) throws ParseException {
+    public PSource(final String data) {
         this.data = data + END;
     }
 
-    protected char readChar() throws IOException {
+    protected char readChar() {
         return data.charAt(pos);
     }
 
@@ -22,22 +20,23 @@ public class PSource {
         return c;
     }
 
-    public void back() {
-        pos--;
+    public char nextChar() {
+        c = readChar();
+        pos++;
+        return c;
     }
 
-    public char nextChar() throws ParseException {
-        try {
-            c = readChar();
-            pos++;
-            return c;
-        } catch (final IOException e) {
-            throw error("Source read error", e.getMessage());
+    public boolean prevIsBracket() {
+        int p = pos - 2;
+        while (p >= 0 && Character.isWhitespace(data.charAt(p))) {
+            p--;
         }
+        if (p < 0) return false;
+        return data.charAt(p) == '(';
     }
 
     public ParseException error(final String format, final Object... args) throws ParseException {
-        return new ParseException(pos, String.format("%d: %s", pos, String.format(format, args)));
+        return new ParseException(String.format(format, args));
     }
 
     public boolean extend(String s) throws ParseException {
